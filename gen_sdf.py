@@ -1,0 +1,75 @@
+import os
+
+def generate_sdf_and_config(folder_path):
+    # 获取子文件夹名字
+    folder_name = os.path.basename(folder_path)
+    
+    # 构建SDF文件内容
+    sdf_content = f'''<?xml version="1.0" ?>
+<sdf version="1.7">
+<!--
+This SDF file was automatically generated using a template modified 
+and authored by Jinjian Li. The moment of interia is not supposed to be changed.
+-->
+    <model name="{folder_name}">
+      <pose>0.0 0.0 0.0 0.0 0.0 0.0</pose> 
+      <link name="link">
+        <inertial>
+          <inertia>
+           <ixx>1.6697164243557222e-06</ixx>
+           <ixy>-7.608043365683558e-23</ixy>
+           <ixz>-8.85497422500391e-24</ixz>
+           <iyy>1.454996005383364e-06</iyy>
+           <iyz>5.1836699346339805e-24</iyz>
+           <izz>4.2928863786736384e-07</izz>
+          </inertia>
+          <mass>0.6120391571167176</mass>
+        </inertial>
+        <collision name="collision">
+          <geometry>
+            <mesh>
+             <uri>{folder_name}.obj</uri>
+             <scale>0.001 0.001 0.001</scale>
+            </mesh>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <mesh>
+             <uri>{folder_name}.obj</uri>
+             <scale>0.001 0.001 0.001</scale>
+            </mesh>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+</sdf>'''
+
+    # 将SDF内容写入文件
+    with open(os.path.join(folder_path, 'model.sdf'), 'w') as sdf_file:
+        sdf_file.write(sdf_content)
+
+    # 构建配置文件内容
+    config_content = f'''<?xml version="1.0" ?>
+<model>
+    <name>{folder_name}</name>
+    <version>1.0</version>
+    <sdf version="1.7">model.sdf</sdf>
+    <author>
+        <name>jinjian li</name>
+        <email>jinjian_l@163.com</email>
+    </author>
+    <description>{folder_name} in YCB-V Dataset</description>
+</model>'''
+
+    # 将配置文件内容写入文件
+    with open(os.path.join(folder_path, 'model.config'), 'w') as config_file:
+        config_file.write(config_content)
+
+# 遍历每个子文件夹并生成对应的SDF文件和配置文件
+models_dir = 'models_ignition'
+for subdir in os.listdir(models_dir):
+    subdir_path = os.path.join(models_dir, subdir)
+    if os.path.isdir(subdir_path):
+        generate_sdf_and_config(subdir_path)
