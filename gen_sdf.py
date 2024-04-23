@@ -1,8 +1,14 @@
 import os
+import trimesh
 
 def generate_sdf_and_config(folder_path):
     # 获取子文件夹名字
     folder_name = os.path.basename(folder_path)
+    
+    obj_file = os.path.join(folder_path, folder_name + '.obj')
+    mesh = trimesh.load_mesh(obj_file)
+    inertia = mesh.moment_inertia/(1000**4)
+    # print(inertia)
     
     # 构建SDF文件内容
     sdf_content = f'''<?xml version="1.0" ?>
@@ -16,14 +22,14 @@ and authored by Jinjian Li. The moment of interia is not supposed to be changed.
       <link name="link">
         <inertial>
           <inertia>
-           <ixx>1.6697164243557222e-06</ixx>
-           <ixy>-7.608043365683558e-23</ixy>
-           <ixz>-8.85497422500391e-24</ixz>
-           <iyy>1.454996005383364e-06</iyy>
-           <iyz>5.1836699346339805e-24</iyz>
-           <izz>4.2928863786736384e-07</izz>
+           <ixx>{inertia[0, 0]}</ixx>
+           <ixy>{inertia[0, 1]}</ixy>
+           <ixz>{inertia[0, 2]}</ixz>
+           <iyy>{inertia[1, 1]}</iyy>
+           <iyz>{inertia[1, 2]}</iyz>
+           <izz>{inertia[2, 2]}</izz>
           </inertia>
-          <mass>0.6120391571167176</mass>
+          <mass>1.0</mass>
         </inertial>
         <collision name="collision">
           <geometry>

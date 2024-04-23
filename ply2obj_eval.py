@@ -1,29 +1,6 @@
 import os
 import trimesh
-
-def simplify_mesh(mesh, target_faces):
-    """
-    使用 Trimesh 库中的简化算法来减少网格的面数。
-
-    参数：
-    - mesh: Trimesh 网格对象
-    - target_faces: 目标面数
-
-    返回值：
-    - simplified_mesh: 简化后的 Trimesh 网格对象
-    """
-    # 确保目标面数不超过当前网格的面数
-    target_faces = min(len(mesh.faces)/10, len(mesh.faces))
-
-    # 使用 Quadric Decimation 算法进行简化
-    simplified_mesh = mesh.simplify_quadric_decimation(target_faces)
-    
-    # 如果简化后的网格不是水密的，则尝试修复
-    if not simplified_mesh.is_watertight:
-        # 尝试使用修复算法来修复网格的水密性
-        simplified_mesh, info = trimesh.repair.fix_winding(simplified_mesh)
-
-    return simplified_mesh
+import shutil
 
 def convert_ply_to_obj(ply_path, texture_path, output_dir):
     # Load PLY file
@@ -37,14 +14,6 @@ def convert_ply_to_obj(ply_path, texture_path, output_dir):
     # Export OBJ file
     obj_file = os.path.join(obj_folder, obj_name + '.obj')
     mesh.export(obj_file, include_texture=True)
-    
-    # Simplify mesh
-    # simplified_mesh = simplify_mesh(mesh, 1000)
-    simplified_mesh = mesh.convex_hull
-    
-    # Export simplified OBJ file
-    simple_obj_file = os.path.join(obj_folder, obj_name + '_simple.obj')
-    simplified_mesh.export(simple_obj_file, include_normals=True, include_texture=False)
     
     # Get the texture file name without extension
     texture_filename = os.path.splitext(os.path.basename(texture_path))[0]
@@ -73,6 +42,20 @@ def convert_ply_to_obj(ply_path, texture_path, output_dir):
     with open(obj_file, 'w') as f:
         f.write(new_obj_content)
 
+def copy_rename_obj(models_eval_dir, output_dir):
+    for filename in os.listdir(models_eval_dir):
+        if filename.endswith('.ply'):
+            ply_path = os.path.join(models_eval_dir, filename)
+            obj_name = os.path.splitext(filename)[0]
+            obj_folder = os.path.join(output_dir, obj_name)
+            os.makedirs(obj_folder, exist_ok=True)
+            
+            obj_file = os.path.join(obj_folder, obj_name + '_simple.obj')
+            # Load PLY file
+            mesh = trimesh.load_mesh(ply_path)
+            mesh.export(obj_file, include_texture=True)
+        # break
+
 def main(input_dir, output_dir):
     # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
@@ -89,6 +72,12 @@ def main(input_dir, output_dir):
                 print(ply_path)
                 convert_ply_to_obj(ply_path, texture_path, output_dir)
         # break
+    
+    # # Copy and rename OBJ files from models_eval directory
+    # models_eval_dir = input_dir + '_eval'
+    # if os.path.exists(models_eval_dir):
+    #     copy_rename_obj(models_eval_dir, output_dir)
+        
 
 if __name__ == "__main__":
     input_dir = "models"
